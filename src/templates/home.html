@@ -1,58 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMP - Centro de Control</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 40px 20px; }
-        .container { max-width: 1000px; margin: 0 auto; text-align: center; }
-        h1 { color: #2c3e50; margin-bottom: 10px; font-size: 2.5em; }
-        .subtitle { color: #7f8c8d; margin-bottom: 40px; font-size: 1.1em; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-top: 20px; }
-        .menu-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; border-top: 5px solid #3498db; text-align: left; }
-        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .menu-card h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 1.4em; display: flex; align-items: center; gap: 10px; }
-        .menu-card p { margin: 0; color: #666; line-height: 1.5; }
-        .icon { font-size: 1.3em; }
-        .c-publico { border-top-color: #2ecc71; }
-        .c-admin { border-top-color: #9b59b6; }
-        .c-dash { border-top-color: #f1c40f; }
-        .footer { margin-top: 50px; color: #bdc3c7; font-size: 0.9em; }
-    </style>
+    <meta charset="UTF-8"><title>CMP - Centro de Control</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-
+    <div class="navbar">
+        <img src="/static/cmp.svg" alt="CMP Logo" style="height: 45px;">
+        <span style="color: #94a3b8; font-size: 0.9em;">Desarrollo Local</span>
+    </div>
     <div class="container">
         <h1>Consent Management Platform (CMP)</h1>
-        <div class="subtitle">Sistema Central de Trazabilidad Normativa y Privacidad</div>
-
+        <div class="subtitle">Ecosistema de Trazabilidad e Inmutabilidad de Datos</div>
         <div class="grid">
             <a href="/form" class="menu-card c-publico">
-                <h3><span class="icon">📝</span> Formulario del Usuario</h3>
-                <p>Simulador de cara al cliente. Permite capturar firmas, aceptar o revocar consentimientos sobre los textos vigentes en tiempo real.</p>
+                <h3>📝 Formulario del Usuario</h3>
+                <p>Simulador para capturar de firmas y consentimientos sobre los textos legales vigentes.</p>
             </a>
-
             <a href="/form" class="menu-card">
-                <h3><span class="icon">🔍</span> Filtro de Legalidad (API)</h3>
-                <p>Sandbox de verificación. Consulta instantánea para sistemas externos (CRM/ERP) para validar si el uso de un dato está permitido.</p>
+                <h3>🔍 Filtro de Legalidad (API)</h3>
+                <p>Sandbox de consulta en tiempo real para validación desde sistemas externos (CRM/ERP).</p>
             </a>
-
             <a href="/admin/management" class="menu-card c-admin">
-                <h3><span class="icon">⚙️</span> Gestión de Documentos</h3>
-                <p>Panel operativo interno. Crea nuevos propósitos de datos, registra documentos legales y publica nuevas versiones de manera automatizada.</p>
+                <h3>⚙️ Gestión de Documentos</h3>
+                <p>Panel operativo interno para dar de alta propósitos y publicar nuevas versiones legales.</p>
             </a>
-
             <a href="/dashboard" class="menu-card c-dash">
-                <h3><span class="icon">📊</span> Dashboard de Trazabilidad</h3>
-                <p>Métricas de cumplimiento y log inmutable de auditoría forense. Acceso directo a las evidencias transaccionales con UUIDs.</p>
+                <h3>📊 Dashboard de Trazabilidad</h3>
+                <p>Métricas globales y logs de auditoría forense inmutable ante entes reguladores.</p>
             </a>
-        </div>
-
-        <div class="footer">
-            Plataforma CMP corporativa v1.0.0 — Entorno de Desarrollo Activo
         </div>
     </div>
-
 </body>
 </html>

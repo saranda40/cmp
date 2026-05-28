@@ -9,8 +9,10 @@ from src.database import get_db
 from src.models.documents import LegalDocument, Purpose, DocumentVersion
 from src.models.consents import ConsentLog, ConsentAction
 from src.routers import legal, evaluation
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0")
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # Configuración del motor de plantillas Jinja2
 templates = Jinja2Templates(directory="src/templates")

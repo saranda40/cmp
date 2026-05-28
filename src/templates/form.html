@@ -1,157 +1,107 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMP - Panel de Control</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2 { color: #2c3e50; margin-top: 0; }
-        .full-width { grid-column: span 2; text-align: center; margin-bottom: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"], input[type="email"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .legal-box { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; height: 15px0px; overflow-y: auto; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em; }
-        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 1pxem; }
-        button:hover { background: #2980b9; }
-        .badge { display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold; color: white; text-transform: uppercase; font-size: 0.85em; }
-        .valido { background-color: #2ecc71; }
-        .obsoleto { background-color: #f1c40f; color: #333; }
-        .rechazado { background-color: #e74c3c; }
-        .inexistente { background-color: #95a5a6; }
-        #resultView { margin-top: 20px; padding: 15px; border-radius: 4px; background: #f8f9fa; border-left: 5px solid #ccc; display: none; }
-    </style>
+    <meta charset="UTF-8"><title>CMP - Captura y Validación</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-
+    <div class="navbar">
+        <img src="/static/cmp.svg" alt="CMP Logo" style="height: 45px;">
+        <a href="/">← Menú Principal</a>
+    </div>
     <div class="container">
-        <div class="full-width">
-            <a href="/" style="text-decoration: none; color: #3498db; font-weight: bold; display: block; margin-bottom: 10px;">← Volver al Menú Principal</a>
-            <h1>Plataforma de Gestión de Consentimientos (CMP)</h1>
-            <p>Demostración operativa del flujo de legalidad e inmutabilidad</p>
-        </div>
-
-        <div class="card">
-            <h2>1. Formulario del Usuario</h2>
-            <form id="consentForm">
+        <div class="grid">
+            <div class="card">
+                <h2>📝 Formulario de Consentimiento</h2>
                 <div class="form-group">
-                    <label for="userEmail">Email del Usuario:</label>
-                    <input type="email" id="userEmail" required placeholder="ejemplo@correo.com">
+                    <label>Texto Legal Vigente</label>
+                    <div class="text-legal-box">
+                        {% if document %}
+                            {{ document.html_content | safe }}
+                        {% else %}
+                            <span style="color: var(--accent-red);">No hay políticas activas en el sistema.</span>
+                        {% endif %}
+                    </div>
                 </div>
+                <!-- Guardamos el ID de versión en el dataset para limpiar el JS -->
+                <form id="consentForm" data-version-id="{% if document %}{{ document.id }}{% else %}null{% endif %}">
+                    <div class="form-group">
+                        <label>Identificador Único del Usuario (Rut / Email)</label>
+                        <input type="text" id="userIdentifier" placeholder="ej: user@empresa.cl" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cláusulas Disponibles</label>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 5px; border: 1px solid var(--border-color);">
+                            {% for purpose in purposes %}
+                            <div class="checkbox-group">
+                                <input type="checkbox" class="check-purpose" id="purpose_{{ purpose.id }}" data-purpose-key="{{ purpose.key }}">
+                                <label for="purpose_{{ purpose.id }}">{{ purpose.description }} (<code>{{ purpose.key }}</code>)</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 15px; margin-top: 25px;">
+                        <button type="button" onclick="sendConsent('ACCEPTED')" style="background: var(--accent-green); flex: 1;">✓ Aceptar Términos</button>
+                        <button type="button" onclick="sendConsent('REJECTED')" class="btn-outline-danger" style="flex: 1;">✕ Rechazar Todo</button>
+                    </div>
+                </form>
+            </div>
 
-                <label>Documento Legal Vigente:</label>
-                <div class="legal-box">
-                    {{ document.html_content|safe }}
-                    <small style="color: gray; display:block; margin-top:5px;">ID Versión: {{ document.id }} | N° Versión: {{ document.version_number }}</small>
-                </div>
-
+            <div class="card" style="background: var(--dark-nav); color: white;">
+                <h2 style="color: white; border-bottom-color: #334155;">🔍 Filtro de Legalidad en Tiempo Real</h2>
+                <p style="color: var(--text-muted); font-size: 0.9em;">Simula la consulta asíncrona de sistemas integrados (CRM/ERP).</p>
                 <div class="form-group">
-                    <label for="purposeSelect">Propósito de datos:</label>
-                    <select id="purposeSelect">
-                        {% for purpose in purposes %}
-                        <option value="{{ purpose.id }}">{{ purpose.key }} - {{ purpose.description }}</option>
-                        {% endfor %}
+                    <label style="color: #94a3b8;">Usuario a Consultar</label>
+                    <input type="text" id="searchUser" placeholder="ej: user@empresa.cl">
+                </div>
+                <div class="form-group">
+                    <label style="color: #94a3b8;">Cláusula / Propósito</label>
+                    <select id="searchPurpose" style="background: white; color: black;">
+                        {% for purpose in purposes %}<option value="{{ purpose.key }}">{{ purpose.key }}</option>{% endfor %}
                     </select>
                 </div>
-
-                <div class="form-group" style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="button" onclick="submitConsent('accepted')" style="background-color: #2ecc71;">Aceptar Consentimiento</button>
-                    <button type="button" onclick="submitConsent('rejected')" style="background-color: #e74c3c;">Rechazar / Revocar</button>
+                <button type="button" onclick="checkAPI()" style="width: 100%; margin-top: 15px;">Consultar Estado de Legalidad</button>
+                <div class="bg-dark-box" style="margin-top: 30px;">
+                    <div style="font-size: 0.8em; color: #64748b; margin-bottom: 5px;">// API RESPONSE JSON:</div>
+                    <pre id="apiResult" style="margin: 0; font-size: 0.9em; white-space: pre-wrap;">Esperando consulta...</pre>
                 </div>
-            </form>
-        </div>
-
-        <div class="card">
-            <h2>2. Filtro de Legalidad (API/ERP)</h2>
-            <p style="font-size: 0.9em; color: #666;">Simula la consulta en tiempo real que haría tu CRM, ERP o sistema de Marketing antes de usar el dato.</p>
-            
-            <div class="form-group">
-                <label for="searchEmail">Email a consultar:</label>
-                <input type="email" id="searchEmail" placeholder="ejemplo@correo.com">
-            </div>
-
-            <div class="form-group">
-                <label for="searchPurpose">Propósito:</label>
-                <select id="searchPurpose">
-                    {% for purpose in purposes %}
-                    <option value="{{ purpose.key }}">{{ purpose.key }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <button type="button" onclick="verifyConsent()">Verificar Permiso de Uso</button>
-
-            <div id="resultView">
-                <h4 style="margin-top: 0;">Resultado del Filtro:</h4>
-                <p>Estado del Consentimiento: <span id="resStatus" class="badge"></span></p>
-                <p>¿Acción Comercial Permitida?: <strong id="resAllowed"></strong></p>
             </div>
         </div>
     </div>
-
     <script>
-        // Registrar Decisión (Aceptar o Rechazar)
-       // CORRECCIÓN: Deja solo "async function"
-async function submitConsent(actionValue) {
-    const email = document.getElementById('userEmail').value;
-    const purposeId = document.getElementById('purposeSelect').value;
-    const versionId = "{{ document.id }}";
+        async function sendConsent(actionType) {
+            const userId = document.getElementById('userIdentifier').value;
+            if(!userId) { alert("Ingresa un identificador."); return; }
 
-    if (!email) { alert("Por favor ingresa un email"); return; }
+            const versionAttr = document.getElementById('consentForm').getAttribute('data-version-id');
+            const versionId = versionAttr === 'null' ? null : parseInt(versionAttr);
 
-    const payload = {
-        user_identifier: email,
-        version_id: parseInt(versionId),
-        purpose_id: parseInt(purposeId),
-        action: actionValue,
-        context: "web_frontend_demo",
-        ip_address: "127.0.0.1"
-    };
+            const purposesPayload = [];
+            document.querySelectorAll('.check-purpose').forEach(cb => {
+                purposesPayload.push({
+                    purpose_key: cb.getAttribute('data-purpose-key'),
+                    is_granted: actionType === 'ACCEPTED' ? cb.checked : false
+                });
+            });
 
-    const response = await fetch('/evaluation/consent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+            const payload = {
+                user_identifier: userId,
+                document_version_id: versionId,
+                action: actionType,
+                purposes: purposesPayload
+            };
 
-    if (response.ok) {
-        alert(`¡Éxito! Registro inmutable guardado como: ${actionValue}`);
-        document.getElementById('searchEmail').value = email; // Autocompleta para probar rápido
-        verifyConsent();
-    } else {
-        alert("Error al registrar consentimiento");
-    }
-}
-        // Consultar Filtro de Legalidad
-        async function verifyConsent() {
-            const email = document.getElementById('searchEmail').value;
-            const purposeKey = document.getElementById('searchPurpose').value;
+            const res = await fetch('/legal/consents', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            if (res.ok) { alert("Transacción inmutada con éxito."); location.reload(); }
+        }
 
-            if (!email) { alert("Ingresa un email para verificar"); return; }
-
-            const response = await fetch(`/evaluation/verify?user_identifier=${email}&purpose_key=${purposeKey}`);
-            const data = await response.json();
-
-            const resultBox = document.getElementById('resultView');
-            const resStatus = document.getElementById('resStatus');
-            const resAllowed = document.getElementById('resAllowed');
-
-            resStatus.textContent = data.status;
-            resStatus.className = `badge ${data.status}`;
-            
-            if (data.allowed) {
-                resAllowed.textContent = "SÍ - Uso Autorizado Legalmente";
-                resAllowed.style.color = "#2ecc71";
-                resultBox.style.borderLeftColor = "#2ecc71";
-            } else {
-                resAllowed.textContent = "NO - Operación Bloqueada";
-                resAllowed.style.color = "#e74c3c";
-                resultBox.style.borderLeftColor = "#e74c3c";
-            }
-
-            resultBox.style.display = "block";
+        async function checkAPI() {
+            const user = document.getElementById('searchUser').value;
+            const purpose = document.getElementById('searchPurpose').value;
+            if(!user) return;
+            const res = await fetch(`/evaluation/evaluate?user_identifier=${encodeURIComponent(user)}&purpose_key=${encodeURIComponent(purpose)}`);
+            const data = await res.json();
+            document.getElementById('apiResult').innerText = JSON.stringify(data, null, 2);
         }
     </script>
 </body>
