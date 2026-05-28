@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMP - Panel de Control</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; margin-top: 0; }
+        .full-width { grid-column: span 2; text-align: center; margin-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="email"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .legal-box { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; height: 15px0px; overflow-y: auto; border-radius: 4px; margin-bottom: 15px; font-size: 0.9em; }
+        button { background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 1pxem; }
+        button:hover { background: #2980b9; }
+        .badge { display: inline-block; padding: 5px 10px; border-radius: 4px; font-weight: bold; color: white; text-transform: uppercase; font-size: 0.85em; }
+        .valido { background-color: #2ecc71; }
+        .obsoleto { background-color: #f1c40f; color: #333; }
+        .rechazado { background-color: #e74c3c; }
+        .inexistente { background-color: #95a5a6; }
+        #resultView { margin-top: 20px; padding: 15px; border-radius: 4px; background: #f8f9fa; border-left: 5px solid #ccc; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="full-width">
+            <a href="/" style="text-decoration: none; color: #3498db; font-weight: bold; display: block; margin-bottom: 10px;">← Volver al Menú Principal</a>
+            <h1>Plataforma de Gestión de Consentimientos (CMP)</h1>
+            <p>Demostración operativa del flujo de legalidad e inmutabilidad</p>
+        </div>
+
+        <div class="card">
+            <h2>1. Formulario del Usuario</h2>
+            <form id="consentForm">
+                <div class="form-group">
+                    <label for="userEmail">Email del Usuario:</label>
+                    <input type="email" id="userEmail" required placeholder="ejemplo@correo.com">
+                </div>
+
+                <label>Documento Legal Vigente:</label>
+                <div class="legal-box">
+                    {{ document.html_content|safe }}
+                    <small style="color: gray; display:block; margin-top:5px;">ID Versión: {{ document.id }} | N° Versión: {{ document.version_number }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="purposeSelect">Propósito de datos:</label>
+                    <select id="purposeSelect">
+                        {% for purpose in purposes %}
+                        <option value="{{ purpose.id }}">{{ purpose.key }} - {{ purpose.description }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" onclick="submitConsent('accepted')" style="background-color: #2ecc71;">Aceptar Consentimiento</button>
+                    <button type="button" onclick="submitConsent('rejected')" style="background-color: #e74c3c;">Rechazar / Revocar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>2. Filtro de Legalidad (API/ERP)</h2>
+            <p style="font-size: 0.9em; color: #666;">Simula la consulta en tiempo real que haría tu CRM, ERP o sistema de Marketing antes de usar el dato.</p>
+            
+            <div class="form-group">
+                <label for="searchEmail">Email a consultar:</label>
+                <input type="email" id="searchEmail" placeholder="ejemplo@correo.com">
+            </div>
+
+            <div class="form-group">
+                <label for="searchPurpose">Propósito:</label>
+                <select id="searchPurpose">
+                    {% for purpose in purposes %}
+                    <option value="{{ purpose.key }}">{{ purpose.key }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="button" onclick="verifyConsent()">Verificar Permiso de Uso</button>
+
+            <div id="resultView">
+                <h4 style="margin-top: 0;">Resultado del Filtro:</h4>
+                <p>Estado del Consentimiento: <span id="resStatus" class="badge"></span></p>
+                <p>¿Acción Comercial Permitida?: <strong id="resAllowed"></strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Registrar Decisión (Aceptar o Rechazar)
+       // CORRECCIÓN: Deja solo "async function"
+async function submitConsent(actionValue) {
+    const email = document.getElementById('userEmail').value;
+    const purposeId = document.getElementById('purposeSelect').value;
+    const versionId = "{{ document.id }}";
+
+    if (!email) { alert("Por favor ingresa un email"); return; }
+
+    const payload = {
+        user_identifier: email,
+        version_id: parseInt(versionId),
+        purpose_id: parseInt(purposeId),
+        action: actionValue,
+        context: "web_frontend_demo",
+        ip_address: "127.0.0.1"
+    };
+
+    const response = await fetch('/evaluation/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+        alert(`¡Éxito! Registro inmutable guardado como: ${actionValue}`);
+        document.getElementById('searchEmail').value = email; // Autocompleta para probar rápido
+        verifyConsent();
+    } else {
+        alert("Error al registrar consentimiento");
+    }
+}
+        // Consultar Filtro de Legalidad
+        async function verifyConsent() {
+            const email = document.getElementById('searchEmail').value;
+            const purposeKey = document.getElementById('searchPurpose').value;
+
+            if (!email) { alert("Ingresa un email para verificar"); return; }
+
+            const response = await fetch(`/evaluation/verify?user_identifier=${email}&purpose_key=${purposeKey}`);
+            const data = await response.json();
+
+            const resultBox = document.getElementById('resultView');
+            const resStatus = document.getElementById('resStatus');
+            const resAllowed = document.getElementById('resAllowed');
+
+            resStatus.textContent = data.status;
+            resStatus.className = `badge ${data.status}`;
+            
+            if (data.allowed) {
+                resAllowed.textContent = "SÍ - Uso Autorizado Legalmente";
+                resAllowed.style.color = "#2ecc71";
+                resultBox.style.borderLeftColor = "#2ecc71";
+            } else {
+                resAllowed.textContent = "NO - Operación Bloqueada";
+                resAllowed.style.color = "#e74c3c";
+                resultBox.style.borderLeftColor = "#e74c3c";
+            }
+
+            resultBox.style.display = "block";
+        }
+    </script>
+</body>
+</html>

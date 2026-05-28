@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMP - Dashboard de Auditoría</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        /* Barra de Navegación */
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; }
+        .navbar a { color: #3498db; text-decoration: none; font-weight: bold; }
+        
+        /* Grilla de Métricas */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .metric-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; border-top: 4px solid #3498db; }
+        .metric-card.success { border-top-color: #2ecc71; }
+        .metric-card.warning { border-top-color: #f1c40f; }
+        .metric-card.danger { border-top-color: #e74c3c; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #2c3e50; margin-top: 5px; }
+        
+        /* Contenedores Principales */
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        h2 { color: #2c3e50; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* Tabla de Auditoría */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; color: #555; }
+        tr:hover { background-color: #f1f4f6; }
+        
+        /* Badges de Estado */
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: white; font-size: 0.8em; text-transform: uppercase; }
+        .accepted { background-color: #2ecc71; }
+        .rejected { background-color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="navbar">
+            <h2>CMP Panel de Auditoría</h2>
+            <a href="/">← Ir al Menú Principal</a>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div>Total Registros Inmutables</div>
+                <div class="metric-value">{{ total_logs }}</div>
+            </div>
+            <div class="metric-card success">
+                <div>Aceptaciones</div>
+                <div class="metric-value">{{ total_accepted }}</div>
+            </div>
+            <div class="metric-card danger">
+                <div>Rechazos / Revocaciones</div>
+                <div class="metric-value">{{ total_rejected }}</div>
+            </div>
+            <div class="metric-card warning">
+                <div>Usuarios Únicos Registrados</div>
+                <div class="metric-value">{{ total_users }}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Historial General de Auditoría (Trazabilidad Absoluta)</h2>
+            <p style="color: #777; font-size: 0.9em;">Este reporte muestra las transacciones directamente de la tabla <code>consent_logs</code>. Es evidencia legal no modificable.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>UUID Evidencia</th>
+                        <th>Fecha/Hora</th>
+                        <th>Identificador Usuario</th>
+                        <th>Propósito (Fin)</th>
+                        <th>Versión Legal</th>
+                        <th>Acción</th>
+                        <th>Contexto</th>
+                        <th>IP Origen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td><small style="color: #888;">{{ log.id }}</small></td>
+                        <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td><strong>{{ log.user_identifier }}</strong></td>
+                        <td><span style="font-family: monospace; background: #eee; padding: 2px 6px; border-radius: 4px;">{{ log.purpose.key }}</span></td>
+                        <td>v{{ log.version.version_number }}</td>
+                        <td>
+                            <span class="badge {{ log.action.value }}">
+                                {{ "Aceptó" if log.action.value == "accepted" else "Rechazó" }}
+                            </span>
+                        </td>
+                        <td>{{ log.context }}</td>
+                        <td><small>{{ log.ip_address or 'N/A' }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999; padding: 20px;">No se registran firmas de consentimiento aún.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

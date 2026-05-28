@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMP - Gestión Legal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; }
+        .navbar a { color: #3498db; text-decoration: none; font-weight: bold; }
+        .navbar h2 { margin: 0; font-size: 1.5em; color: #ecf0f1;}
+        .navbar a:hover { text-decoration: underline; color: #2980b9; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .full-width { grid-column: span 2; }
+        h2 { color: #2c3e50; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 100px; font-family: monospace; }
+        button { background: #9b59b6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #8e44ad; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="navbar">
+            <h2>Panel de Configuración y Gestión Legal</h2>
+            <a href="/">← Volver al Inicio</a>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>1. Alta de Propósito Comercial</h2>
+                <form id="purposeForm">
+                    <div class="form-group">
+                        <label>Llave única (Key):</label>
+                        <input type="text" id="pKey" placeholder="ej: newsletter_comercial" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción Operativa:</label>
+                        <input type="text" id="pDesc" placeholder="ej: Envío de ofertas dirigidas..." required>
+                    </div>
+                    <button type="button" onclick="submitPurpose()">Guardar Propósito</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>2. Registro de Documento Legal</h2>
+                <form id="docForm">
+                    <div class="form-group">
+                        <label>Nombre del Documento:</label>
+                        <input type="text" id="dName" placeholder="ej: Políticas de Cookies" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Slug Identificador:</label>
+                        <input type="text" id="dSlug" placeholder="ej: politicas-cookies" required>
+                    </div>
+                    <button type="button" onclick="submitDocument()">Registrar Documento</button>
+                </form>
+            </div>
+
+            <div class="card full-width">
+                <h2>3. Publicar Nueva Versión de Texto Legal</h2>
+                <p style="color: #777; font-size: 0.9em; margin-top: 0;">Nota: Si marcas la versión como <strong>Activa</strong>, el sistema desactivará automáticamente las versiones anteriores de ese documento.</p>
+                <form id="versionForm">
+                    <div class="form-group">
+                        <label>Seleccionar Documento Base:</label>
+                        <select id="vDocId">
+                            {% for doc in documents %}
+                            <option value="{{ doc.id }}">{{ doc.name }} ({{ doc.slug }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Número de Versión:</label>
+                        <input type="number" id="vNumber" placeholder="ej: 2" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contenido del documento (HTML Admitido):</label>
+                        <textarea id="vHtml" placeholder="<h3>Título</h3><p>Cuerpo del texto legal...</p>" required></textarea>
+                    </div>
+                    <div class="form-group" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="checkbox" id="vActive" checked style="width: auto;">
+                        <label for="vActive" style="margin: 0;">Publicar y marcar como Versión Activa Inmediatamente</label>
+                    </div>
+                    <button type="button" onclick="submitVersion()" style="background-color: #34495e;">Publicar Versión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Call: Crear Propósito
+        async function submitPurpose() {
+            const payload = { key: document.getElementById('pKey').value, description: document.getElementById('pDesc').value };
+            const res = await fetch('/legal/purposes', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            if (res.ok) { alert("¡Propósito guardado con éxito!"); location.reload(); } else { alert("Error al guardar propósito (Llave duplicada)"); }
+        }
+
+        // API Call: Registrar Documento Base
+        async function submitDocument() {
+            const payload = { name: document.getElementById('dName').value, slug: document.getElementById('dSlug').value };
+            const res = await fetch('/legal/documents', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            if (res.ok) { alert("¡Documento base registrado!"); location.reload(); } else { alert("Error al registrar documento (Slug duplicado)"); }
+        }
+
+        // API Call: Publicar Versión
+        async function submitVersion() {
+            const payload = {
+                document_id: parseInt(document.getElementById('vDocId').value),
+                version_number: parseInt(document.getElementById('vNumber').value),
+                html_content: document.getElementById('vHtml').value,
+                is_active: document.getElementById('vActive').checked
+            };
+            const res = await fetch('/legal/versions', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+            if (res.ok) { alert("¡Nueva versión publicada con éxito!"); window.location.href = "/"; } else { alert("Error al publicar la versión"); }
+        }
+    </script>
+</body>
+</html>

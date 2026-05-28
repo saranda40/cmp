@@ -1,0 +1,23 @@
+# Entornos virtuales (Virtual Environments)
+.venv/
+env/
+ENV/
+venv/
+
+# Caché de Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Variables de entorno locales (¡Muy importante no subir tus contraseñas!)
+.env
+
+# Configuraciones de editores
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
